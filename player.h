@@ -17,8 +17,9 @@ struct player_t{
     int total_balance;
 };
 
-int initialize_player(struct player_t *player); //Initializes player
+int initialize_player(struct player_t *player, char map[][129]); //Initializes player
 int spawn_player(struct player_t *player, char map[][129]);
 int move_player(struct player_t *player, char map[][129]);
+void validate_field(struct player_t *player, char map[][129]);
 
 #endif

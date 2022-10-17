@@ -12,6 +12,15 @@
 #define CAMPSITE 4
 #define BEAST 5
 
+//Map treasures
+#define COIN 1
+#define TREASURE 10
+#define LTREASURE 50
+
+//Campsite coords
+#define X 23
+#define Y 11
+
 //Map structure
 struct map_t{
     char **map;

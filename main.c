@@ -11,12 +11,16 @@ int main() {
     initscr();
     curs_set(0);
     map_load(map);
-    map_print(map);
-    display_ui();
-    initialize_player(&player1);
+    initialize_player(&player1, map);
     spawn_player(&player1, map);
     map_print(map);
-    display_ui();
+    display_ui(&player1);
+    while(1)
+    {
+        move_player(&player1, map);
+        map_print(map);
+        display_ui(&player1);
+    }
     char c = getch();
     if(c == 'q' || c == 'Q')
     {
