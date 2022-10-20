@@ -18,8 +18,8 @@
 #define LTREASURE 50
 
 //Campsite coords
-#define X 23
-#define Y 11
+#define CAMPSITE_X 23
+#define CAMPSITE_Y 11
 
 //Map structure
 struct map_t{

@@ -1,12 +1,16 @@
+#include <ncurses.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "UI.h"
+#include "map.h"
 
-void display_ui(struct player_t *player)
+void display_ui(struct player_t *player, unsigned long rounds)
 {
     if(player)
     {
-        mvprintw(3, 70, "Server's PID: -\n");
-        mvprintw(4, 73, "Campsite X/Y: unknown\n");
-        mvprintw(5, 73, "Round number: 32234\n");
+        mvprintw(3, 70, "Server's PID: %lun\n", getpid());
+        mvprintw(4, 73, "Campsite X/Y: %02d/%02d\n", CAMPSITE_X, CAMPSITE_Y);
+        mvprintw(5, 73, "Round number: %lu\n", rounds);
 
         mvprintw(7, 70, "Player:\n");
         mvprintw(8, 73, "Number:     3\n");
