@@ -1,6 +1,8 @@
 #ifndef GAME_BEAST_MAP_H
 #define GAME_BEAST_MAP_H
 
+#include "player_t.h"
+
 //Max map dimensions
 #define MAX_MAP_HEIGHT 128
 #define MAX_MAP_WIDTH 128
@@ -32,6 +34,7 @@ struct map_t *map_init(); //Initializes a map
 int map_load(char map[][MAX_MAP_WIDTH+1]); //Loads a map to static array
 void map_print(char map[][MAX_MAP_WIDTH+1]); //Prints a map from static array
 void map_display(struct map_t *map); //Displays an entire map
-void destroy_map_structure(struct map_t **map); //Destroys a map structure
+void print_player(struct player_t *player);
+
 
 #endif

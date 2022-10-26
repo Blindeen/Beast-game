@@ -132,7 +132,6 @@ void map_display(struct map_t *map)
 {
     if(map != NULL)
     {
-        start_color();
         init_pair(WALL, COLOR_WHITE, COLOR_WHITE);
         init_pair(MONEY, COLOR_WHITE, COLOR_GREEN);
         init_pair(PLAYER, COLOR_WHITE, COLOR_MAGENTA);
@@ -175,15 +174,15 @@ void map_display(struct map_t *map)
     }
 }
 
-void destroy_map_structure(struct map_t **map)
+void print_player(struct player_t *player)
 {
-    if(map != NULL && *map != NULL)
+    if(player)
     {
-        for(int i = 0; i < (*map)->height; ++i)
-        {
-            free(*((*map)->map+i));
-        }
-        free((*map)->map);
-        free(*map);
+        init_pair(PLAYER, COLOR_WHITE, COLOR_MAGENTA);
+        attron(COLOR_PAIR(PLAYER));
+        mvaddch(3+player->curr_cooridantes.y, 3+player->curr_cooridantes.x, player->num);
+        attroff(COLOR_PAIR(PLAYER));
+
+        refresh();
     }
 }
