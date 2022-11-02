@@ -12,6 +12,7 @@ struct player_t{
 
     int key;
     unsigned int key_flag:1;
+    unsigned int slow:1;
 
     char num;
     struct point_t spawn_point;

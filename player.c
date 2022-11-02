@@ -5,6 +5,7 @@
 #include "player.h"
 #include "UI.h"
 #include "dt_structures.h"
+#include "map.h"
 
 struct recv_player_data_argument{
     struct clients_data *data;
@@ -35,6 +36,8 @@ void player_loop(int server_socket)
     keypad(stdscr, TRUE);
 
     struct recv_player_data_argument data;
+    memset(&data, 0, sizeof(struct recv_player_data_argument));
+
     struct clients_data playersData;
     data.data = &playersData;
     data.server_socket = server_socket;
@@ -46,18 +49,31 @@ void player_loop(int server_socket)
     pthread_create(&servers_data, NULL, receive_players_data, (void *)&data);
 
     struct player_packet playerPacket;
-    playerPacket.conn_status = 1;
     playerPacket.pid = getpid();
 
-    timeout(50);
+    timeout(20);
 
     while(data.data->game_status)
     {
-        player_ui(&playersData);
+        if(playersData.server_id)
+        {
+            print_empty_fields();
+            print_player_map(data.data->map, &data.data->position);
+            print_player(&data.data->position, data.data->num);
+            player_ui(&playersData);
+            for(int i = 0; i < 4; ++i)
+            {
+                if(playersData.players_pos[i].x && playersData.players_pos[i].y)
+                {
+                    print_player(&playersData.players_pos[i], i+1+'0');
+                }
+            }
+        }
         playerPacket.key = getch();
         if(playerPacket.key == 'q')
         {
             send(server_socket, &playerPacket, sizeof(struct player_packet), 0);
+            data.data->game_status = 0;
             break;
         }
         send(server_socket, &playerPacket, sizeof(struct player_packet), 0);

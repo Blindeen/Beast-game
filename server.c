@@ -2,12 +2,99 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <unistd.h>
-#include "server.h"
-#include "UI.h"
-#include "map.h"
-#include "keyboard_thread.h"
 #include <sys/socket.h>
 #include <string.h>
+#include "server.h"
+#include "UI.h"
+#include "keyboard_thread.h"
+
+pthread_mutex_t mutex;
+
+void players_in_range(struct point_t *players_pos, struct player_t *player, struct player_t *players)
+{
+    if(players_pos && player && players)
+    {
+        int x = player->curr_cooridantes.x - 2;
+        int y = player->curr_cooridantes.y - 2;
+
+        for(int i = y; i < y+5; ++i)
+        {
+            for(int j = x; j < x+5; ++j)
+            {
+                for(int k = 0; k < 4; ++k)
+                {
+                    if(i == players[k].curr_cooridantes.y && j == players[k].curr_cooridantes.x && player->num != players[k].num)
+                    {
+                        players_pos[k].y = i;
+                        players_pos[k].x = j;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void put_coins(char map[][MAX_MAP_WIDTH+1], int* key)
+{
+    struct point_t empty_field = find_empty_field(map);
+
+    switch (*key) {
+        case 'c':
+        {
+            map[empty_field.y][empty_field.x] = 'c';
+            
+        }
+            break;
+        case 'C':
+        {
+            map[empty_field.y][empty_field.x] = 'C';
+        }
+            break;
+        case 'T':
+        {
+            map[empty_field.y][empty_field.x] = 'T';
+        }
+            break;
+        default:
+        {
+
+        }
+    }
+
+    *key = -1;
+}
+
+int is_colision(struct player_t *player, struct server_info *info)
+{
+    if(!player || !info)
+    {
+        return -1;
+    }
+
+    for(int i = 0; i < 4; ++i)
+    {
+        if(player->curr_cooridantes.x == info->players[i].curr_cooridantes.x && player->curr_cooridantes.y == info->players[i].curr_cooridantes.y && player->num != info->players[i].num)
+        {
+            unsigned int treasure = player->current_balance + info->players[i].current_balance;
+
+            if(treasure > 0)
+            {
+                dll_push_back(info->dropped_treasures, treasure, &player->curr_cooridantes);
+                info->map[player->curr_cooridantes.y][player->curr_cooridantes.x] = 'D';
+                player->current_balance = 0;
+                info->players[i].current_balance = 0;
+            }
+
+            player->curr_cooridantes = player->spawn_point;
+            info->players[i].curr_cooridantes = info->players[i].spawn_point;
+
+            return 1;
+        }
+    }
+
+    return 0;
+
+}
 
 struct player_t *find_players_spot(struct server_info *info)
 {
@@ -26,7 +113,7 @@ struct player_t *find_players_spot(struct server_info *info)
     return NULL;
 }
 
-int initialize_player(struct player_t *player, char map[][129])
+int initialize_player(struct player_t *player, char map[][MAX_MAP_WIDTH+1])
 {
     srand(time(NULL));
 
@@ -46,8 +133,9 @@ int initialize_player(struct player_t *player, char map[][129])
     return 1;
 }
 
-struct point_t find_empty_field(char map[][129])
+struct point_t find_empty_field(char map[][MAX_MAP_WIDTH+1])
 {
+    //TODO: Change this function due to spawning two or more player in the exact location
     int x, y;
     do {
         x = rand()%52;
@@ -57,16 +145,29 @@ struct point_t find_empty_field(char map[][129])
     return (struct point_t){x, y};
 }
 
-void move_player(struct player_t *player, char map[][129])
+void move_player(struct player_t *player, struct server_info *info)
 {
     if(player)
     {
         int x = player->curr_cooridantes.x, y = player->curr_cooridantes.y;
 
+        if(info->map[player->curr_cooridantes.y][player->curr_cooridantes.x] == '#')
+        {
+            if(!player->slow)
+            {
+                player->slow = 1;
+                return;
+            }
+            else
+            {
+                player->slow = 0;
+            }
+        }
+
         switch (player->key) {
             case KEY_UP:
             {
-                if(map[y-1][x] != 'W')
+                if(info->map[y-1][x] != 'W')
                 {
                     y -= 1;
                     player->curr_cooridantes.y = y;
@@ -75,7 +176,7 @@ void move_player(struct player_t *player, char map[][129])
                 break;
             case KEY_LEFT:
             {
-                if(map[y][x-1] != 'W')
+                if(info->map[y][x-1] != 'W')
                 {
                     x -= 1;
                     player->curr_cooridantes.x = x;
@@ -84,7 +185,7 @@ void move_player(struct player_t *player, char map[][129])
                 break;
             case KEY_RIGHT:
             {
-                if(map[y][x+1] != 'W')
+                if(info->map[y][x+1] != 'W')
                 {
                     x += 1;
                     player->curr_cooridantes.x = x;
@@ -93,7 +194,7 @@ void move_player(struct player_t *player, char map[][129])
                 break;
             case KEY_DOWN:
             {
-                if(map[y+1][x] != 'W')
+                if(info->map[y+1][x] != 'W')
                 {
                     y += 1;
                     player->curr_cooridantes.y = y;
@@ -106,37 +207,46 @@ void move_player(struct player_t *player, char map[][129])
             }
         }
 
-        validate_field(player, map);
+        validate_field(player, info);
     }
 
 }
 
-void validate_field(struct player_t *player, char map[][129])
+void validate_field(struct player_t *player, struct server_info *info)
 {
     if(player)
     {
         int x = player->curr_cooridantes.x, y = player->curr_cooridantes.y;
 
-        switch (map[y][x]) {
+        switch (info->map[y][x]) {
             case 'c':
             {
-                player->current_balance += 1;
+                player->current_balance += COIN;
+                info->map[y][x] = ' ';
             }
                 break;
             case 'C':
             {
-                player->current_balance += 10;
+                player->current_balance += TREASURE;
+                info->map[y][x] = ' ';
             }
                 break;
             case 'T':
             {
-                player->current_balance += 50;
+                player->current_balance += LTREASURE;
+                info->map[y][x] = ' ';
             }
                 break;
             case 'A':
             {
                 player->total_balance += player->current_balance;
                 player->current_balance = 0;
+            }
+                break;
+            case 'D':
+            {
+                player->current_balance += dll_remove(info->dropped_treasures, &player->curr_cooridantes, NULL);
+                info->map[y][x] = ' ';
             }
                 break;
             default:{
@@ -222,7 +332,7 @@ void game_server_loop(int server_socket)
     start_color();
 
     struct server_info info;
-    memset(info.players, 0, 4* sizeof(struct player_t));
+    memset(info.players, 0, 4 * sizeof(struct player_t));
 
     map_load(info.map);
 
@@ -230,28 +340,34 @@ void game_server_loop(int server_socket)
     info.rounds = 0;
     info.game_status = 1;
     info.players_number = 0;
+    info.dropped_treasures = dll_create();
+    info.beasts = dll_beast_create();
 
     pthread_t thread_accept;
     pthread_create(&thread_accept, NULL, server_accept, &info);
     pthread_detach(thread_accept);
 
-//    int key;
-//    pthread_t key_thread;
-//    pthread_create(&key_thread, NULL, recv_key, &key);
+    int key = -1;
+    pthread_t key_thread;
+    pthread_create(&key_thread, NULL, recv_key, &key);
+//    pthread_detach(key_thread);
 
     while(info.game_status)
     {
-//        if(key == 'q')
-//        {
-//            info.game_status = 0;
-//        }
+        usleep(500000);
+        if(key == 'q' || key == 'Q')
+        {
+            info.game_status = 0;
+        }
+        put_coins(info.map, &key);
         map_print(info.map);
-        //display_ui(&info.players[0], info.rounds);
+        display_ui(&info);
         for(int i = 0; i < 4; ++i)
         {
             if(info.players[i].pid && info.players[i].key_flag)
             {
-                move_player(&info.players[i], info.map);
+                move_player(&info.players[i], &info);
+                is_colision(&info.players[i], &info);
                 info.players[i].key_flag = 0;
             }
 
@@ -260,24 +376,34 @@ void game_server_loop(int server_socket)
         {
             if(info.players[i].pid)
             {
-                    print_player(&info.players[i]);
-//                struct clients_data data;
-//
-//                data.current_balance = 0;
-//                data.total_balance = 0;
-//                data.deaths = 0;
-//                data.position = info.players[0].curr_cooridantes;
-//                data.server_id = 20;
-//                data.game_status = 1;
+                print_player(&info.players[i].curr_cooridantes, info.players[i].num);
 
-//                send(info.players[i].psocket, &data, sizeof(struct clients_data), 0);
+                struct clients_data data;
+                memset(&data, 0, sizeof(struct clients_data));
+                data.current_balance = info.players[i].current_balance;
+                data.total_balance = info.players[i].total_balance;
+                data.deaths = info.players[i].deaths;
+                data.position = info.players[i].curr_cooridantes;
+                data.server_id = getpid();
+                data.game_status = info.game_status;
+                data.num = info.players[i].num;
+                data.round = info.rounds;
+                copy_map(info.map, &info.players[i], data.map);
+                players_in_range(data.players_pos, &info.players[i], info.players);
+
+                send(info.players[i].psocket, &data, sizeof(struct clients_data), 0);
             }
         }
-        usleep(500000);
-//        key = -1;
+        info.rounds += 1;
     }
 
     pthread_cancel(thread_accept);
+//    pthread_cancel(key_thread);
+    dll_clear(info.dropped_treasures);
+    free(info.dropped_treasures);
+
+    dll_beast_clear(info.beasts);
+    free(info.beasts);
 
     endwin();
 }

@@ -4,7 +4,6 @@
 //Contains server's received data
 struct player_packet{
     pid_t pid;
-    unsigned int conn_status:1;
     int key;
 };
 
@@ -17,8 +16,10 @@ struct clients_data{
     unsigned int total_balance;
     unsigned int round;
     pid_t server_id;
+    char num;
 
     unsigned int game_status:1;
+    struct point_t players_pos[4];
 };
 
 #endif
