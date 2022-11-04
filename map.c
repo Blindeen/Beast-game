@@ -184,3 +184,17 @@ void print_empty_fields()
 
     refresh();
 }
+
+void print_beast(struct point_t *coords)
+{
+    if(coords)
+    {
+        init_pair(BEAST, COLOR_RED, COLOR_BLACK);
+        attron(COLOR_PAIR(BEAST));
+        mvaddch(3+coords->y, 3+coords->x, '*');
+        attroff(COLOR_PAIR(BEAST));
+
+    }
+
+    refresh();
+}

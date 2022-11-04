@@ -7,7 +7,7 @@
 #include "player_t.h"
 #include "map.h"
 #include "doubly_linked_list.h"
-#include "doubly_linked_list_beast.h"
+#include "beast_t.h"
 
 //Map treasures
 #define COIN 1
@@ -25,7 +25,7 @@ struct server_info{
     unsigned long rounds;
 
     struct doubly_linked_list_t *dropped_treasures;
-    struct doubly_linked_list_beast_t *beasts;
+    struct beast_t beasts[20];
 };
 
 struct recv_data_arguments{
@@ -33,6 +33,9 @@ struct recv_data_arguments{
     struct server_info *info;
 };
 
+void beasts_in_range(struct point_t *beasts_pos, struct player_t *player, struct beast_t *beasts);
+void move_beast(struct beast_t *beast, struct server_info *info);
+struct beast_t *find_beast_spot(struct server_info *info);
 void players_in_range(struct point_t *players_pos, struct player_t *player, struct player_t *players);
 void put_coins(char map[][MAX_MAP_WIDTH+1], int* key);
 int is_colision(struct player_t *player, struct server_info *info); //Checks if collision has happened

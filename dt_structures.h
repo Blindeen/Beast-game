@@ -20,6 +20,7 @@ struct clients_data{
 
     unsigned int game_status:1;
     struct point_t players_pos[4];
+    struct point_t beasts_pos[20];
 };
 
 #endif

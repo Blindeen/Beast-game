@@ -7,8 +7,103 @@
 #include "server.h"
 #include "UI.h"
 #include "keyboard_thread.h"
+#include "beast_thread.h"
 
 pthread_mutex_t mutex;
+
+void beasts_in_range(struct point_t *beasts_pos, struct player_t *player, struct beast_t *beasts)
+{
+    if(beasts_pos && player && beasts)
+    {
+        int x = player->curr_cooridantes.x - 2;
+        int y = player->curr_cooridantes.y - 2;
+
+        for(int i = y; i < y+5; ++i)
+        {
+            for(int j = x; j < x+5; ++j)
+            {
+                for(int k = 0; k < 20; ++k)
+                {
+                    if(i == beasts[k].curr_cooridantes.y && j == beasts[k].curr_cooridantes.x)
+                    {
+                        beasts_pos[k].y = i;
+                        beasts_pos[k].x = j;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void move_beast(struct beast_t *beast, struct server_info *info)
+{
+    if(beast && info)
+    {
+
+        int x = beast->curr_cooridantes.x;
+        int y = beast->curr_cooridantes.y;
+
+        switch (beast->direction) {
+            case UP:
+            {
+                if(info->map[y-1][x] != 'W')
+                {
+                    y -= 1;
+                    beast->curr_cooridantes.y = y;
+                }
+            }
+                break;
+            case DOWN:
+            {
+                if(info->map[y+1][x] != 'W')
+                {
+                    y += 1;
+                    beast->curr_cooridantes.y = y;
+                }
+            }
+                break;
+            case LEFT:
+            {
+                if(info->map[y][x-1] != 'W')
+                {
+                    x -= 1;
+                    beast->curr_cooridantes.x = x;
+                }
+            }
+                break;
+            case RIGHT:
+            {
+                if(info->map[y][x+1] != 'W')
+                {
+                    x += 1;
+                    beast->curr_cooridantes.x = x;
+                }
+            }
+                break;
+            default:
+            {
+
+            }
+        }
+
+    }
+}
+
+struct beast_t *find_beast_spot(struct server_info *info)
+{
+    if(info)
+    {
+        for(int i = 0; i < 20; ++i)
+        {
+            if(!info->beasts[i].curr_cooridantes.x && !info->beasts[i].curr_cooridantes.y)
+            {
+                return &info->beasts[i];
+            }
+        }
+    }
+
+    return NULL;
+}
 
 void players_in_range(struct point_t *players_pos, struct player_t *player, struct player_t *players)
 {
@@ -333,6 +428,7 @@ void game_server_loop(int server_socket)
 
     struct server_info info;
     memset(info.players, 0, 4 * sizeof(struct player_t));
+    memset(info.beasts, 0, 20 * sizeof(struct beast_t));
 
     map_load(info.map);
 
@@ -341,7 +437,6 @@ void game_server_loop(int server_socket)
     info.game_status = 1;
     info.players_number = 0;
     info.dropped_treasures = dll_create();
-    info.beasts = dll_beast_create();
 
     pthread_t thread_accept;
     pthread_create(&thread_accept, NULL, server_accept, &info);
@@ -350,18 +445,33 @@ void game_server_loop(int server_socket)
     int key = -1;
     pthread_t key_thread;
     pthread_create(&key_thread, NULL, recv_key, &key);
-//    pthread_detach(key_thread);
 
     while(info.game_status)
     {
         usleep(500000);
+
         if(key == 'q' || key == 'Q')
         {
             info.game_status = 0;
         }
+        else if(key == 'b' || key == 'B')
+        {
+            pthread_t beast_th;
+            pthread_create(&beast_th, NULL, beast_thread , &info);
+        }
+
         put_coins(info.map, &key);
         map_print(info.map);
         display_ui(&info);
+
+        for(int i = 0; i < 20; ++i)
+        {
+            if(info.beasts[i].curr_cooridantes.x || info.beasts[i].curr_cooridantes.y)
+            {
+                print_beast(&info.beasts[i].curr_cooridantes);
+            }
+        }
+
         for(int i = 0; i < 4; ++i)
         {
             if(info.players[i].pid && info.players[i].key_flag)
@@ -372,6 +482,17 @@ void game_server_loop(int server_socket)
             }
 
         }
+
+        for(int i = 0; i < 20; ++i)
+        {
+            if(info.beasts[i].curr_cooridantes.x || info.beasts[i].curr_cooridantes.y)
+            {
+                pthread_mutex_lock(&mutex);
+                move_beast(&info.beasts[i], &info);
+                pthread_mutex_unlock(&mutex);
+            }
+        }
+
         for(int i=0; i < 4; ++i)
         {
             if(info.players[i].pid)
@@ -390,20 +511,21 @@ void game_server_loop(int server_socket)
                 data.round = info.rounds;
                 copy_map(info.map, &info.players[i], data.map);
                 players_in_range(data.players_pos, &info.players[i], info.players);
+                beasts_in_range(data.beasts_pos, &info.players[i], info.beasts);
 
                 send(info.players[i].psocket, &data, sizeof(struct clients_data), 0);
             }
         }
+
         info.rounds += 1;
     }
 
     pthread_cancel(thread_accept);
-//    pthread_cancel(key_thread);
+
     dll_clear(info.dropped_treasures);
     free(info.dropped_treasures);
 
-    dll_beast_clear(info.beasts);
-    free(info.beasts);
+    pthread_mutex_unlock(&mutex);
 
     endwin();
 }

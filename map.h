@@ -33,6 +33,7 @@ void copy_map(char map[][MAX_MAP_WIDTH+1], struct player_t *player, char o_map[]
 void print_player_map(char map[][P_WIDTH+1], struct point_t *coords); //Print a player's part of the map
 int is_camp_in_range(char map[][P_WIDTH+1]);
 void print_empty_fields();
+void print_beast(struct point_t *coords);
 
 
 #endif
