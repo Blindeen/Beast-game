@@ -1,13 +1,14 @@
 #include <ncurses.h>
 #include "keyboard_thread.h"
+#include "server.h"
 
 void *recv_key(void *arg)
 {
-    int *key = (int *)arg;
+    struct server_info *info = (struct server_info*)arg;
 //    timeout(50);
-    while(1)
+    while(info->game_status)
     {
-        *key = getchar();
+        info->key = getchar();
     }
 
     return NULL;

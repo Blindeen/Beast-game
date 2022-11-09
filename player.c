@@ -55,6 +55,14 @@ void player_loop(int server_socket)
 
     while(data.data->game_status)
     {
+        for(int i = 0; i < 20; ++i)
+        {
+            if(playersData.beasts_pos[i].x && playersData.beasts_pos[i].y)
+            {
+                print_beast(&playersData.beasts_pos[i]);
+            }
+        }
+
         if(playersData.server_id)
         {
             print_empty_fields();
@@ -66,13 +74,6 @@ void player_loop(int server_socket)
                 if(playersData.players_pos[i].x && playersData.players_pos[i].y)
                 {
                     print_player(&playersData.players_pos[i], i+1+'0');
-                }
-            }
-            for(int i = 0; i < 20; ++i)
-            {
-                if(playersData.beasts_pos[i].x && playersData.beasts_pos[i].y)
-                {
-                    print_beast(&playersData.beasts_pos[i]);
                 }
             }
         }

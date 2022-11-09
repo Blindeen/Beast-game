@@ -9,7 +9,29 @@
 #include "keyboard_thread.h"
 #include "beast_thread.h"
 
-pthread_mutex_t mutex;
+void collision_w_beast(struct server_info *info)
+{
+    if(info)
+    {
+        for(int i = 0; i < 4; ++i)
+        {
+            for(int j = 0; j < 20; ++j)
+            {
+                if(info->players[i].curr_cooridantes.x == info->beasts[j].curr_cooridantes.x && info->players[i].curr_cooridantes.y == info->beasts[j].curr_cooridantes.y)
+                {
+                    if(info->players[i].current_balance > 0)
+                    {
+                        dll_push_back(info->dropped_treasures, info->players[i].current_balance, &info->players[i].curr_cooridantes);
+                        info->players[i].current_balance = 0;
+                        info->map[info->players[i].curr_cooridantes.y][info->players[i].curr_cooridantes.x] = 'D';
+                    }
+
+                    info->players[i].curr_cooridantes = info->players[i].spawn_point;
+                }
+            }
+        }
+    }
+}
 
 void beasts_in_range(struct point_t *beasts_pos, struct player_t *player, struct beast_t *beasts)
 {
@@ -437,30 +459,30 @@ void game_server_loop(int server_socket)
     info.game_status = 1;
     info.players_number = 0;
     info.dropped_treasures = dll_create();
+    info.key = -1;
 
     pthread_t thread_accept;
     pthread_create(&thread_accept, NULL, server_accept, &info);
     pthread_detach(thread_accept);
 
-    int key = -1;
     pthread_t key_thread;
-    pthread_create(&key_thread, NULL, recv_key, &key);
+    pthread_create(&key_thread, NULL, recv_key, &info);
 
     while(info.game_status)
     {
         usleep(500000);
 
-        if(key == 'q' || key == 'Q')
+        if(info.key == 'q' || info.key == 'Q')
         {
             info.game_status = 0;
         }
-        else if(key == 'b' || key == 'B')
+        else if(info.key == 'b' || info.key == 'B')
         {
             pthread_t beast_th;
             pthread_create(&beast_th, NULL, beast_thread , &info);
         }
 
-        put_coins(info.map, &key);
+        put_coins(info.map, &info.key);
         map_print(info.map);
         display_ui(&info);
 
@@ -483,15 +505,21 @@ void game_server_loop(int server_socket)
 
         }
 
+        pthread_mutex_lock(&mutex);
+
         for(int i = 0; i < 20; ++i)
         {
             if(info.beasts[i].curr_cooridantes.x || info.beasts[i].curr_cooridantes.y)
             {
-                pthread_mutex_lock(&mutex);
                 move_beast(&info.beasts[i], &info);
-                pthread_mutex_unlock(&mutex);
             }
         }
+
+        pthread_mutex_unlock(&mutex);
+
+        pthread_mutex_lock(&mutex);
+        collision_w_beast(&info);
+        pthread_mutex_unlock(&mutex);
 
         for(int i=0; i < 4; ++i)
         {

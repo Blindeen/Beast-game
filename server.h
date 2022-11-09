@@ -26,6 +26,8 @@ struct server_info{
 
     struct doubly_linked_list_t *dropped_treasures;
     struct beast_t beasts[20];
+
+    int key;
 };
 
 struct recv_data_arguments{
@@ -33,6 +35,7 @@ struct recv_data_arguments{
     struct server_info *info;
 };
 
+void collision_w_beast(struct server_info *info);
 void beasts_in_range(struct point_t *beasts_pos, struct player_t *player, struct beast_t *beasts);
 void move_beast(struct beast_t *beast, struct server_info *info);
 struct beast_t *find_beast_spot(struct server_info *info);
