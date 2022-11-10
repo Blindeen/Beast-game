@@ -27,6 +27,7 @@ void collision_w_beast(struct server_info *info)
                     }
 
                     info->players[i].curr_cooridantes = info->players[i].spawn_point;
+                    info->players[i].deaths += 1;
                 }
             }
         }
@@ -203,7 +204,10 @@ int is_colision(struct player_t *player, struct server_info *info)
             }
 
             player->curr_cooridantes = player->spawn_point;
+            player->deaths += 1;
+
             info->players[i].curr_cooridantes = info->players[i].spawn_point;
+            info->players[i].deaths += 1;
 
             return 1;
         }
@@ -486,14 +490,6 @@ void game_server_loop(int server_socket)
         map_print(info.map);
         display_ui(&info);
 
-        for(int i = 0; i < 20; ++i)
-        {
-            if(info.beasts[i].curr_cooridantes.x || info.beasts[i].curr_cooridantes.y)
-            {
-                print_beast(&info.beasts[i].curr_cooridantes);
-            }
-        }
-
         for(int i = 0; i < 4; ++i)
         {
             if(info.players[i].pid && info.players[i].key_flag)
@@ -542,6 +538,15 @@ void game_server_loop(int server_socket)
                 beasts_in_range(data.beasts_pos, &info.players[i], info.beasts);
 
                 send(info.players[i].psocket, &data, sizeof(struct clients_data), 0);
+            }
+        }
+
+
+        for(int i = 0; i < 20; ++i)
+        {
+            if(info.beasts[i].curr_cooridantes.x || info.beasts[i].curr_cooridantes.y)
+            {
+                print_beast(&info.beasts[i].curr_cooridantes);
             }
         }
 

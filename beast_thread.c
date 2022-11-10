@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <ncurses.h>
 
 void *beast_thread(void *arg)
 {
@@ -16,10 +17,13 @@ void *beast_thread(void *arg)
 
     beast->curr_cooridantes = find_empty_field(info->map);
 
+//    timeout(20);
+
     srand(time(NULL));
     while(info->game_status)
     {
         usleep(500000);
+
         pthread_mutex_lock(&mutex);
 
         struct point_t *player_coords;
@@ -115,8 +119,6 @@ void *beast_thread(void *arg)
 
 struct point_t* player_in_beast_range(struct beast_t *beast, struct server_info *info)
 {
-//    pthread_mutex_lock(&mut);
-
     if(beast && info)
     {
         int x = beast->curr_cooridantes.x - 2;
