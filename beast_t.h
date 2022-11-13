@@ -5,7 +5,6 @@
 #include "point.h"
 
 struct beast_t{
-    pthread_t beast_thread;
     struct point_t curr_cooridantes;
     unsigned int direction;
 };

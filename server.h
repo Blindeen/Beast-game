@@ -41,7 +41,7 @@ void move_beast(struct beast_t *beast, struct server_info *info);
 struct beast_t *find_beast_spot(struct server_info *info);
 void players_in_range(struct point_t *players_pos, struct player_t *player, struct player_t *players);
 void put_coins(char map[][MAX_MAP_WIDTH+1], int* key);
-int is_colision(struct player_t *player, struct server_info *info); //Checks if collision has happened
+int is_collision(struct player_t *player, struct server_info *info); //Checks if collision has happened
 struct player_t *find_players_spot(struct server_info *info); //Finds empty position in player_t array
 int initialize_player(struct player_t *player, char map[][MAX_MAP_WIDTH+1]); //Initializes player
 struct point_t find_empty_field(char map[][MAX_MAP_WIDTH+1]); //Finds empty field on the map

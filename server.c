@@ -182,7 +182,7 @@ void put_coins(char map[][MAX_MAP_WIDTH+1], int* key)
     *key = -1;
 }
 
-int is_colision(struct player_t *player, struct server_info *info)
+int is_collision(struct player_t *player, struct server_info *info)
 {
     if(!player || !info)
     {
@@ -495,7 +495,7 @@ void game_server_loop(int server_socket)
             if(info.players[i].pid && info.players[i].key_flag)
             {
                 move_player(&info.players[i], &info);
-                is_colision(&info.players[i], &info);
+                is_collision(&info.players[i], &info);
                 info.players[i].key_flag = 0;
             }
 
@@ -514,7 +514,9 @@ void game_server_loop(int server_socket)
         pthread_mutex_unlock(&mutex);
 
         pthread_mutex_lock(&mutex);
+
         collision_w_beast(&info);
+
         pthread_mutex_unlock(&mutex);
 
         for(int i=0; i < 4; ++i)
