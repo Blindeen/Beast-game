@@ -501,6 +501,14 @@ void game_server_loop(int server_socket)
 
         }
 
+        for(int i = 0; i < 20; ++i)
+        {
+            if(info.beasts[i].curr_cooridantes.x || info.beasts[i].curr_cooridantes.y)
+            {
+                pthread_mutex_unlock(&info.beasts[i].beast_mutex);
+            }
+        }
+
         pthread_mutex_lock(&mutex);
 
         for(int i = 0; i < 20; ++i)

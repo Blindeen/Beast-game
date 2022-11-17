@@ -4,11 +4,6 @@
 #include "server.h"
 #include <pthread.h>
 
-struct beast_t_thread{
-    struct server_info *info;
-    struct beast_t *beast;
-};
-
 enum directions{
     UP,
     DOWN,

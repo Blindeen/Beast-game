@@ -19,7 +19,7 @@ void *beast_thread(void *arg)
     srand(time(NULL));
     while(info->game_status)
     {
-        usleep(500000);
+        pthread_mutex_lock(&beast->beast_mutex);
 
         pthread_mutex_lock(&mutex);
 
