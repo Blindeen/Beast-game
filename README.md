@@ -1,4 +1,4 @@
-# Best game
+# Beast game
 ## Description
 2D labirynth game written in C language. Players have to collect coins and store them in a campsite. They also have to worry about hunting beast which can kill players. Death caused by beast or collison with other player results in loss of carried money.
 ## Author
