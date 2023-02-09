@@ -4,7 +4,7 @@
 
 int map_load(char map[][129])
 {
-    FILE *f = fopen("map1.txt", "rt");
+    FILE *f = fopen("assets/map.txt", "rt");
     if(f == NULL)
     {
         return 0;
