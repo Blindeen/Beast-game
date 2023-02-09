@@ -17,13 +17,25 @@
 - `c` - spawn a coin
 - `t` - spawn a treasure
 - `T` - spawn a large treasure
-
 ### Client
 - `q`/`Q` - quit the game
-- `w`/`W`/ &uarr; - move up
-- `s`/`S`/ &darr; - move down
-- `a`/`A`/ &larr; - move left
-- `d`/`D`/ &rarr; - move right
+- :arrow_up: - move up
+- :arrow_down: - move down
+- :arrow_left: - move left
+- :arrow_right: - move right
+## How to run
+### Clone
+```bash
+git clone https://github.com/Blindeen/Beast-game.git
+```
+### Change directory
+```bash
+cd Beast-game
+```
+### Play
+```bash
+make run
+```
 ## Overview
 ![image](https://user-images.githubusercontent.com/93998927/217538851-1f843875-0974-4506-8d21-acf40ea2ab53.png)
 ![image](https://user-images.githubusercontent.com/93998927/217539062-f42179ee-93c0-434e-85fb-820e71396e21.png)
