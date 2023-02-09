@@ -4,7 +4,7 @@ CFLAGS = -Wall -pedantic
 LDFLAGS = -lm -lncurses -lpthread
 
 SRC_DIR = ./src
-OBJ_DIR = ./build
+OBJ_DIR = ./obj
 
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
