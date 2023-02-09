@@ -20,7 +20,7 @@
 
 ### Client
 - `q`/`Q` - quit the game
-- `:arrow_up:` - move up
+- :arrow_up: - move up
 - :arrow_down: - move down
 - :arrow_left: - move left
 - :arrow_right: - move right
